@@ -79,14 +79,38 @@ class OkxRestClient:
         Raises:
             OkxApiError: API调用失败时抛出
         """
+        # 构建查询字符串（用于签名）
+        # OKX要求查询参数按字母顺序排序
+        # 过滤掉None值，并按字母顺序排序
+        filtered_params = {}
+        if params:
+            filtered_params = {k: v for k, v in params.items() if v is not None}
+
+        # 对参数值进行URL编码（除了字母数字和-_.~）
+        from urllib.parse import quote
+        sorted_params = sorted(filtered_params.items()) if filtered_params else []
+        query_string = ""
+        if sorted_params:
+            query_string = "?" + "&".join(f"{k}={quote(str(v), safe='-_.~')}" for k, v in sorted_params)
+
         url = f"{self.REST_ENDPOINT}{path}"
         body_str = json.dumps(body) if body else ""
         timestamp = self._generate_timestamp()
 
+        # 签名路径：对于GET请求，需要包含查询字符串
+        request_path_for_sign = path + query_string if method == "GET" and query_string else path
+
+        # 调试日志
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.debug(f"签名路径: {request_path_for_sign}")
+        logger.debug(f"时间戳: {timestamp}")
+        logger.debug(f"方法: {method}")
+
         headers = self._signer.generate_headers(
             timestamp=timestamp,
             method=method,
-            request_path=path,
+            request_path=request_path_for_sign,
             body=body_str,
             is_simulated=self._is_simulated,
         )
@@ -96,11 +120,12 @@ class OkxRestClient:
         for attempt in range(self.MAX_RETRIES):
             try:
                 session = await self._get_session()
+                # 使用排序后的参数发送请求，确保顺序一致
                 async with session.request(
                     method=method,
                     url=url,
                     headers=headers,
-                    params=params,
+                    params=sorted_params if sorted_params else None,
                     data=body_str if body_str else None,
                 ) as response:
                     response_text = await response.text()
@@ -224,16 +249,21 @@ class OkxRestClient:
             body["posSide"] = pos_side
         return await self._request_with_retry("POST", "/api/v5/account/set-leverage", body=body)
 
-    async def get_instrument(self, inst_id: str) -> dict[str, Any]:
+    async def get_instrument(
+        self,
+        inst_id: str,
+        inst_type: str = "SWAP",
+    ) -> dict[str, Any]:
         """查询交易对信息。
 
         Args:
             inst_id: 交易对ID
+            inst_type: 产品类型，默认SWAP（永续合约）
 
         Returns:
             交易对信息
         """
-        params = {"instId": inst_id}
+        params = {"instId": inst_id, "instType": inst_type}
         return await self._request_with_retry("GET", "/api/v5/public/instruments", params=params)
 
     # ==================== 交易类接口 ====================

@@ -121,10 +121,14 @@ class TraderOutput(BaseModel):
             except ValueError as e:
                 raise ValueError(f"无效的操作类型: {op_str}") from e
 
+            # 生成client_oid（最多32字符）
+            raw_oid = item.get("client_oid", str(uuid4()))
+            client_oid = raw_oid.replace("-", "")[:32]
+
             instruction = TradeInstruction(
                 op=op,
                 args=item.get("args", {}),
-                client_oid=item.get("client_oid", str(uuid4())),
+                client_oid=client_oid,
             )
             instructions.append(instruction)
 

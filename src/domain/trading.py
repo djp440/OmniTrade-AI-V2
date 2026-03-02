@@ -178,7 +178,7 @@ class TradeInstruction(BaseModel):
 
     op: TradeOperation = Field(..., description="操作类型")
     args: dict[str, Any] = Field(default_factory=dict, description="操作参数")
-    client_oid: str = Field(default_factory=lambda: str(uuid4()), description="客户端订单ID")
+    client_oid: str = Field(default_factory=lambda: str(uuid4()).replace("-", "")[:32], description="客户端订单ID（最多32字符）")
 
     @model_validator(mode="after")
     def validate_instruction(self) -> Self:
