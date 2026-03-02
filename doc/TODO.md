@@ -156,39 +156,48 @@
 
 ### 子任务
 
-- [ ] 4.1 定义交易领域模型
+- [x] 4.1 定义交易领域模型
   - K线模型：timestamp、open、high、low、close、vol、confirm
   - 仓位模型：inst_id、direction、size、entry_price、stop_price、profit_price、unrealized_pnl
   - 交易指令模型：op、args、client_oid
   - 交易记录模型：timestamp、inst_id、position_direction、position_size、entry_avg_price、exit_avg_price、realized_pnl、balance_after_close、order_id
 
-- [ ] 4.2 定义Agent模型
+- [x] 4.2 定义Agent模型
   - 分析师输入/输出模型
   - 交易员输入/输出模型（含JSON Schema校验）
   - 压缩者输入/输出模型
 
-- [ ] 4.3 定义事件模型
+- [x] 4.3 定义事件模型
   - K线收盘事件：inst_id、timeframe、收盘K线数据
   - 交易完成事件：inst_id、op、order_id、执行结果、错误信息
   - 平仓完成事件：inst_id、平仓仓位信息、平仓后账户余额
 
-- [ ] 4.4 定义配置数据模型
+- [x] 4.4 定义配置数据模型
   - 全局配置模型
   - 交易对配置模型
   - Prompt配置模型
 
 ### 测试标准
 
-- [ ] 单元测试：所有模型能正确序列化和反序列化
-- [ ] 单元测试：交易指令模型验证逻辑正确
-- [ ] 单元测试：交易员输出JSON Schema校验正确
+- [x] 单元测试：所有模型能正确序列化和反序列化 (53个测试通过)
+- [x] 单元测试：交易指令模型验证逻辑正确
+- [x] 单元测试：交易员输出JSON Schema校验正确
 
 ### 验收条件
 
-- [ ] 所有领域模型定义完整
-- [ ] 模型验证能正确拦截非法数据
-- [ ] 事件模型支持异步事件总线
+- [x] 所有领域模型定义完整
+- [x] 模型验证能正确拦截非法数据
+- [x] 事件模型支持异步事件总线
 
+
+# 方式1：从子模块导入
+from src.domain.trading import Kline, Position
+from src.domain.agent import AnalystInput
+from src.domain.events import KlineCloseEvent
+from src.domain.config import Config
+
+# 方式2：从包根导入（推荐）
+from src.domain import Kline, Position, AnalystInput, KlineCloseEvent, Config
 ---
 
 ## 阶段五：服务层 - K线服务与历史记录服务
@@ -197,14 +206,14 @@
 
 ### 子任务
 
-- [ ] 5.1 实现K线服务
+- [x] 5.1 实现K线服务
   - 监听WebSocket K线收盘事件
   - 收到事件后调用REST接口获取最近N根K线
   - 计算EMA20
   - 生成K线图base64
   - 触发分析流程
 
-- [ ] 5.2 实现历史记录管理服务
+- [x] 5.2 实现历史记录管理服务
   - 每个交易对维护独立的分析历史列表（内存存储）
   - 新增记录时检查长度，超出 `max_analysis_history_length` 自动删除最早记录
   - 提供清空历史接口
@@ -212,15 +221,15 @@
 
 ### 测试标准
 
-- [ ] 单元测试：K线服务能正确处理收盘事件
-- [ ] 单元测试：历史记录管理能正确维护长度限制
-- [ ] 集成测试：模拟K线收盘事件，验证完整流程
+- [x] 单元测试：K线服务能正确处理收盘事件 (11个测试通过)
+- [x] 单元测试：历史记录管理能正确维护长度限制 (16个测试通过)
+- [x] 集成测试：模拟K线收盘事件，验证完整流程 (5个测试通过)
 
 ### 验收条件
 
-- [ ] K线服务能正确获取数据并生成图表
-- [ ] 历史记录长度限制生效
-- [ ] 平仓后历史记录正确清空
+- [x] K线服务能正确获取数据并生成图表
+- [x] 历史记录长度限制生效
+- [x] 平仓后历史记录正确清空
 
 ---
 
