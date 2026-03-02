@@ -1,0 +1,25 @@
+[global]
+demo_mode = true
+log_level = "INFO"
+log_dir = "./logs"
+max_analysis_history_length = 10
+k_line_count = 100
+llm_model = "gpt-4o"
+trade_record_path = "./trade_records.csv"
+td_mode = "isolated"
+
+[[trade_pairs]]
+inst_id = "BTC-USDT-SWAP"
+timeframe = "1H"
+leverage = 10
+position_size = 100
+stop_loss_ratio = 0.02
+take_profit_ratio = 0.05
+
+[[trade_pairs]]
+inst_id = "ETH-USDT-SWAP"
+timeframe = "4H"
+leverage = 20
+position_size = 50
+stop_loss_ratio = 0.03
+take_profit_ratio = 0.08
