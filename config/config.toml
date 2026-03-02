@@ -4,7 +4,7 @@ log_level = "INFO"
 log_dir = "./logs"
 max_analysis_history_length = 10
 k_line_count = 100
-llm_model = "gpt-4o"
+llm_model = "qwen/qwen3.5-flash-02-23"
 trade_record_path = "./trade_records.csv"
 td_mode = "isolated"
 
