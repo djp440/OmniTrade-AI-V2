@@ -75,12 +75,16 @@ class PromptConfig(BaseModel):
         inst_id: str,
         position: str,
         balance: Decimal,
-        position_size: Decimal,
+        current_price: Decimal,
+        risk_per_trade: Decimal,
+        analyst_output: str,
     ) -> str:
         """格式化交易员Prompt"""
         return self.trader_system_prompt.format(
             inst_id=inst_id,
             position=position,
             balance=balance,
-            position_size=position_size,
+            current_price=current_price,
+            risk_per_trade=risk_per_trade,
+            analyst_output=analyst_output,
         )

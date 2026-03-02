@@ -17,8 +17,10 @@ system_prompt = """
 2. op只能是：entry_long/entry_short/close_position/change_stop/change_profit/exit_long/exit_short
 3. 开仓必须带stop_loss和take_profit参数
 4. 减仓size必须小于当前持仓，全平必须用close_position
+5. 开仓数量计算：根据分析师给出的方向、止损价格，结合当前价格、账户余额、单笔风险百分比，使用公式计算：开仓数量 = (账户余额 × 单笔风险百分比) ÷ |当前价格 - 止损价格| × 当前价格
 
-当前交易对：{inst_id}，仓位：{position}，余额：{balance}，开仓金额：{position_size}
+当前交易对：{inst_id}，仓位：{position}，余额：{balance}，当前价格：{current_price}，单笔风险百分比：{risk_per_trade}
+分析师建议：{analyst_output}
 """
 
 [compressor]

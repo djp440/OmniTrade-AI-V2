@@ -42,7 +42,8 @@ class TraderInput(BaseModel):
     analyst_output: str = Field(..., description="分析师输出")
     current_position: Position = Field(..., description="当前仓位")
     account_balance: Decimal = Field(..., description="账户余额")
-    position_size_limit: Decimal = Field(..., description="开仓金额限制")
+    current_price: Decimal = Field(..., description="当前价格")
+    risk_per_trade: Decimal = Field(..., description="单笔风险百分比")
     inst_id: str = Field(..., description="交易对ID")
 
 

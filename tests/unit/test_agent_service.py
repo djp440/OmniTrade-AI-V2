@@ -55,7 +55,8 @@ class TestAgentService(IsolatedAsyncioTestCase):
 当前交易对：{inst_id}，周期：{timeframe}，仓位：{position}，余额：{balance}
 历史分析记录：{history}""",
             trader="""你是交易员。
-当前交易对：{inst_id}，仓位：{position}，余额：{balance}，开仓金额：{position_size}""",
+当前交易对：{inst_id}，仓位：{position}，余额：{balance}，当前价格：{current_price}，单笔风险百分比：{risk_per_trade}
+分析师建议：{analyst_output}""",
             compressor="将分析压缩为不超过100字。",
         )
         self.llm_model = "gpt-4o"
@@ -123,7 +124,8 @@ class TestAgentService(IsolatedAsyncioTestCase):
             analyst_output="建议开多仓",
             current_position=position,
             account_balance=Decimal("10000"),
-            position_size_limit=Decimal("100"),
+            current_price=Decimal("50000"),
+            risk_per_trade=Decimal("0.01"),
             inst_id="BTC-USDT-SWAP",
         )
 
@@ -149,7 +151,8 @@ class TestAgentService(IsolatedAsyncioTestCase):
             analyst_output="建议平仓",
             current_position=position,
             account_balance=Decimal("10000"),
-            position_size_limit=Decimal("100"),
+            current_price=Decimal("50000"),
+            risk_per_trade=Decimal("0.01"),
             inst_id="BTC-USDT-SWAP",
         )
 
@@ -170,7 +173,8 @@ class TestAgentService(IsolatedAsyncioTestCase):
             analyst_output="建议开多",
             current_position=position,
             account_balance=Decimal("10000"),
-            position_size_limit=Decimal("100"),
+            current_price=Decimal("50000"),
+            risk_per_trade=Decimal("0.01"),
             inst_id="BTC-USDT-SWAP",
         )
 
@@ -193,7 +197,8 @@ class TestAgentService(IsolatedAsyncioTestCase):
                 analyst_output="建议开多",
                 current_position=position,
                 account_balance=Decimal("10000"),
-                position_size_limit=Decimal("100"),
+                current_price=Decimal("50000"),
+                risk_per_trade=Decimal("0.01"),
                 inst_id="BTC-USDT-SWAP",
             )
 
@@ -213,7 +218,8 @@ class TestAgentService(IsolatedAsyncioTestCase):
                 analyst_output="建议操作",
                 current_position=position,
                 account_balance=Decimal("10000"),
-                position_size_limit=Decimal("100"),
+                current_price=Decimal("50000"),
+                risk_per_trade=Decimal("0.01"),
                 inst_id="BTC-USDT-SWAP",
             )
 
@@ -256,7 +262,8 @@ class TestAgentService(IsolatedAsyncioTestCase):
             analysis_history=[],
             current_position=position,
             account_balance=Decimal("10000"),
-            position_size_limit=Decimal("100"),
+            current_price=Decimal("50000"),
+            risk_per_trade=Decimal("0.01"),
         )
 
         self.assertEqual(len(instructions), 1)
@@ -286,7 +293,8 @@ class TestAgentService(IsolatedAsyncioTestCase):
             analysis_history=[],
             current_position=position,
             account_balance=Decimal("10000"),
-            position_size_limit=Decimal("100"),
+            current_price=Decimal("50000"),
+            risk_per_trade=Decimal("0.01"),
         )
 
         self.assertEqual(len(instructions), 1)

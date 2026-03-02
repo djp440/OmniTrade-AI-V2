@@ -359,10 +359,12 @@ class TestAgentModels:
             analyst_output="分析师建议开多仓",
             current_position=position,
             account_balance=Decimal("10000"),
-            position_size_limit=Decimal("100"),
+            current_price=Decimal("50000"),
+            risk_per_trade=Decimal("0.01"),
             inst_id="BTC-USDT-SWAP",
         )
-        assert input_data.position_size_limit == Decimal("100")
+        assert input_data.current_price == Decimal("50000")
+        assert input_data.risk_per_trade == Decimal("0.01")
 
     def test_trader_output_from_json(self):
         """测试从JSON解析交易员输出"""
@@ -610,18 +612,21 @@ class TestPromptConfig:
         """测试格式化交易员Prompt"""
         config = PromptConfig(
             analyst="分析师",
-            trader="交易对：{inst_id}，仓位：{position}，余额：{balance}，开仓金额：{position_size}",
+            trader="交易对：{inst_id}，仓位：{position}，余额：{balance}，当前价格：{current_price}，单笔风险百分比：{risk_per_trade}",
             compressor="压缩者",
         )
         formatted = config.format_trader_prompt(
             inst_id="BTC-USDT-SWAP",
             position="long 1.5",
             balance=Decimal("10000"),
-            position_size=Decimal("100"),
+            current_price=Decimal("50000"),
+            risk_per_trade=Decimal("0.01"),
+            analyst_output="建议开多仓",
         )
         assert "BTC-USDT-SWAP" in formatted
         assert "10000" in formatted
-        assert "100" in formatted
+        assert "50000" in formatted
+        assert "0.01" in formatted
 
 
 class TestModelSerialization:

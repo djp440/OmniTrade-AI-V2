@@ -114,7 +114,8 @@ class AgentService:
         analyst_output: str,
         current_position: Position,
         account_balance: Decimal,
-        position_size_limit: Decimal,
+        current_price: Decimal,
+        risk_per_trade: Decimal,
         inst_id: str,
     ) -> TraderOutput:
         """调用交易员Agent
@@ -125,7 +126,8 @@ class AgentService:
             analyst_output: 分析师输出
             current_position: 当前仓位
             account_balance: 账户余额
-            position_size_limit: 开仓金额限制
+            current_price: 当前价格
+            risk_per_trade: 单笔风险百分比
             inst_id: 交易对ID
 
         Returns:
@@ -140,7 +142,9 @@ class AgentService:
             inst_id=inst_id,
             position=position_text,
             balance=account_balance,
-            position_size=position_size_limit,
+            current_price=current_price,
+            risk_per_trade=risk_per_trade,
+            analyst_output=analyst_output,
         )
 
         last_error: Exception | None = None
@@ -224,7 +228,8 @@ class AgentService:
         analysis_history: list[str],
         current_position: Position,
         account_balance: Decimal,
-        position_size_limit: Decimal,
+        current_price: Decimal,
+        risk_per_trade: Decimal,
     ) -> tuple[list[TradeInstruction], str]:
         """执行完整分析流程
 
@@ -239,7 +244,8 @@ class AgentService:
             analysis_history: 历史分析记录
             current_position: 当前仓位
             account_balance: 账户余额
-            position_size_limit: 开仓金额限制
+            current_price: 当前价格
+            risk_per_trade: 单笔风险百分比
 
         Returns:
             (交易指令列表, 压缩后的分析文本)
@@ -260,7 +266,8 @@ class AgentService:
             analyst_output=analyst_output.analysis,
             current_position=current_position,
             account_balance=account_balance,
-            position_size_limit=position_size_limit,
+            current_price=current_price,
+            risk_per_trade=risk_per_trade,
             inst_id=inst_id,
         )
 
