@@ -299,8 +299,10 @@ class OKXRestClient:
 class OKXWebSocketClient:
     """OKX WebSocket客户端"""
 
+    # OKX WebSocket公共频道URL (根据官方文档)
     WS_PUBLIC_URL = "wss://ws.okx.com:8443/ws/v5/public"
-    WS_PUBLIC_DEMO_URL = "wss://wspap.okx.com:8443/ws/v5/public"
+    # 模拟盘WebSocket URL (模拟盘不支持WebSocket公共频道，使用实盘获取K线数据)
+    WS_PUBLIC_DEMO_URL = "wss://ws.okx.com:8443/ws/v5/public"
     MAX_RECONNECT_ATTEMPTS = 5
 
     def __init__(self, demo_mode: bool = False):
@@ -320,7 +322,9 @@ class OKXWebSocketClient:
                 print(f"[WebSocket] Already connected, reusing existing connection")
                 return
 
-            url = self.WS_PUBLIC_DEMO_URL if self.demo_mode else self.WS_PUBLIC_URL
+            # K线数据使用实盘WebSocket（公共数据），模拟盘可能不支持K线频道
+            # 注意：交易操作仍然使用模拟盘REST API
+            url = self.WS_PUBLIC_URL
             print(f"[WebSocket] Connecting to {url}...")
 
             for attempt in range(self.MAX_RECONNECT_ATTEMPTS):
@@ -389,7 +393,6 @@ class OKXWebSocketClient:
             "op": "subscribe",
             "args": [{"channel": channel, "instId": inst_id}],
         }
-
         await self.ws.send(json.dumps(sub_message))
         self.subscriptions.add((channel, inst_id))
 

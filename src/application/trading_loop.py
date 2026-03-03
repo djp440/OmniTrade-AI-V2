@@ -84,10 +84,6 @@ class TradingLoop:
             )
             self._tasks.append(task)
 
-        # 启动WebSocket监听
-        ws_task = asyncio.create_task(self._websocket_listener(), name="websocket_listener")
-        self._tasks.append(ws_task)
-
         # 等待所有任务完成
         try:
             await asyncio.gather(*self._tasks, return_exceptions=True)
@@ -95,38 +91,19 @@ class TradingLoop:
             self.logger.info("Trading loop cancelled")
 
     async def _run_trade_pair(self, pair: TradePairConfig):
-        """运行单个交易对的循环"""
+        """运行单个交易对的循环（使用REST轮询监控K线收盘）"""
         self.logger.info(f"Starting trading loop for {pair.inst_id}")
 
         try:
-            # 确保WebSocket已连接
-            if not self.okx_ws_client._is_ws_connected():
-                self.logger.info(f"Connecting WebSocket for {pair.inst_id}...")
-                await self.okx_ws_client.connect()
-
-            # 订阅K线
+            # 使用REST轮询监控K线收盘
             await self.kline_service.subscribe_kline(
                 inst_id=pair.inst_id,
                 timeframe=pair.timeframe,
                 callback=lambda event: self._on_kline_close(event, pair),
             )
 
-            # 保持运行
-            while self.running:
-                await asyncio.sleep(1)
-
         except Exception as e:
             self.logger.error(f"Error in trading loop for {pair.inst_id}: {e}")
-
-    async def _websocket_listener(self):
-        """WebSocket监听协程"""
-        try:
-            await self.okx_ws_client.listen(lambda data: None)
-        except Exception as e:
-            self.logger.error(f"WebSocket listener error: {e}")
-            if self.running:
-                self.logger.fatal("WebSocket connection lost, stopping...")
-                await self.stop()
 
     async def _on_kline_close(self, event: KlineCloseEvent, pair: TradePairConfig):
         """K线收盘事件处理"""
