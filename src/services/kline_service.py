@@ -90,7 +90,7 @@ class KlineService:
             callback: K线收盘事件回调函数
         """
         self.logger.info(
-            f"Starting precise Kline monitoring for {inst_id} with timeframe {timeframe}"
+            f"启动精确K线监控 {inst_id} 周期: {timeframe}"
         )
 
         # 初始化：获取当前最新的收盘K线
@@ -104,14 +104,14 @@ class KlineService:
                 last_closed_kline = klines[-2]
                 last_closed_timestamp = last_closed_kline.timestamp
                 self.logger.info(
-                    f"Initialized monitoring for {inst_id}, "
-                    f"last closed kline: {datetime.fromtimestamp(last_closed_timestamp / 1000)}"
+                    f"初始化监控完成 {inst_id}, "
+                    f"最新收盘K线: {datetime.fromtimestamp(last_closed_timestamp / 1000)}"
                 )
             else:
-                self.logger.error(f"Failed to get initial klines for {inst_id}")
+                self.logger.error(f"获取初始K线失败 {inst_id}")
                 return
         except Exception as e:
-            self.logger.error(f"Failed to initialize monitoring for {inst_id}: {e}")
+            self.logger.error(f"初始化监控失败 {inst_id}: {e}")
             return
 
         while True:
@@ -126,14 +126,14 @@ class KlineService:
                 wait_seconds = (next_close_dt - current_dt).total_seconds()
 
                 self.logger.info(
-                    f"Next kline close for {inst_id} at {next_close_dt} "
-                    f"(in {wait_seconds:.0f}s), waiting..."
+                    f"下一根K线收盘时间 {inst_id}: {next_close_dt} "
+                    f"(还有 {wait_seconds:.0f}秒), 等待中..."
                 )
 
                 # 睡眠到下一根K线收盘前1秒
                 sleep_seconds = self._sleep_until_next_close(next_close_timestamp)
                 if sleep_seconds > 0:
-                    self.logger.debug(f"Sleeping for {sleep_seconds:.1f} seconds...")
+                    self.logger.debug(f"睡眠 {sleep_seconds:.1f} 秒...")
                     await asyncio.sleep(sleep_seconds)
 
                 # 在收盘时刻附近密集轮询，直到检测到新的收盘K线
@@ -159,8 +159,8 @@ class KlineService:
                                 latest_closed_kline.timestamp / 1000
                             )
                             self.logger.info(
-                                f"Kline CLOSED for {inst_id} at {close_dt}, "
-                                f"triggering analysis..."
+                                f"K线已收盘 {inst_id} 时间: {close_dt}, "
+                                f"触发分析..."
                             )
 
                             event = KlineCloseEvent(
@@ -180,12 +180,12 @@ class KlineService:
                 else:
                     # 超时未检测到新的收盘K线
                     self.logger.warning(
-                        f"Timeout waiting for kline close for {inst_id}, "
-                        f"expected at {next_close_dt}"
+                        f"等待K线收盘超时 {inst_id}, "
+                        f"预期时间: {next_close_dt}"
                     )
 
             except Exception as e:
-                self.logger.error(f"Error in kline monitoring for {inst_id}: {e}")
+                self.logger.error(f"K线监控出错 {inst_id}: {e}")
                 await asyncio.sleep(5)  # 出错后等待5秒再重试
 
     async def get_historical_klines(

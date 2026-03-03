@@ -59,7 +59,7 @@ class TradingLoop:
 
     async def run(self):
         """运行主事件循环"""
-        self.logger.info("Starting trading loop...")
+        self.logger.info("启动交易循环...")
         self.running = True
 
         # 为每个交易对创建锁
@@ -88,11 +88,11 @@ class TradingLoop:
         try:
             await asyncio.gather(*self._tasks, return_exceptions=True)
         except asyncio.CancelledError:
-            self.logger.info("Trading loop cancelled")
+            self.logger.info("交易循环已取消")
 
     async def _run_trade_pair(self, pair: TradePairConfig):
         """运行单个交易对的循环（使用REST轮询监控K线收盘）"""
-        self.logger.info(f"Starting trading loop for {pair.inst_id}")
+        self.logger.info(f"启动交易对循环 {pair.inst_id}")
 
         try:
             # 使用REST轮询监控K线收盘
@@ -103,23 +103,23 @@ class TradingLoop:
             )
 
         except Exception as e:
-            self.logger.error(f"Error in trading loop for {pair.inst_id}: {e}")
+            self.logger.error(f"交易对循环出错 {pair.inst_id}: {e}")
 
     async def _on_kline_close(self, event: KlineCloseEvent, pair: TradePairConfig):
         """K线收盘事件处理"""
         self.logger.info(
-            f"Kline closed for {event.inst_id} at {datetime.fromtimestamp(event.kline.timestamp / 1000)}"
+            f"K线收盘 {event.inst_id} 时间: {datetime.fromtimestamp(event.kline.timestamp / 1000)}"
         )
 
         # 尝试获取锁
         lock = self._locks.get(event.inst_id)
         if lock is None:
-            self.logger.error(f"No lock found for {event.inst_id}")
+            self.logger.error(f"未找到锁 {event.inst_id}")
             return
 
         if lock.locked():
             self.logger.warning(
-                f"Previous analysis for {event.inst_id} is still running, skipping..."
+                f"上一次分析仍在运行 {event.inst_id}, 跳过..."
             )
             return
 
@@ -127,11 +127,11 @@ class TradingLoop:
             try:
                 await self._analyze_and_trade(event, pair)
             except Exception as e:
-                self.logger.error(f"Error during analysis for {event.inst_id}: {e}")
+                self.logger.error(f"分析过程出错 {event.inst_id}: {e}")
 
     async def _analyze_and_trade(self, event: KlineCloseEvent, pair: TradePairConfig):
         """分析并执行交易"""
-        self.logger.info(f"Starting analysis for {event.inst_id}")
+        self.logger.info(f"开始分析 {event.inst_id}")
 
         # 1. 并行查询余额和仓位
         balance_task = self.trade_service.get_balance("USDT")
@@ -140,8 +140,8 @@ class TradingLoop:
         balance, position = await asyncio.gather(balance_task, position_task)
 
         self.logger.info(
-            f"Account balance: {balance.available} USDT, "
-            f"Position: {position.direction.value if not position.is_empty else 'empty'}"
+            f"账户余额: {balance.available} USDT, "
+            f"持仓: {'空仓' if position.is_empty else ('多仓' if position.direction.value == 'long' else '空仓')}"
         )
 
         # 2. 获取历史K线数据并生成图表
@@ -152,7 +152,7 @@ class TradingLoop:
         )
 
         if len(klines) < 20:
-            self.logger.warning(f"Not enough klines for {event.inst_id}: {len(klines)}")
+            self.logger.warning(f"K线数据不足 {event.inst_id}: {len(klines)}")
             return
 
         # 计算EMA20
@@ -209,8 +209,8 @@ class TradingLoop:
             await self.agent_service.analyze_and_trade(analyst_input, trader_input)
         )
 
-        self.logger.info(f"Analysis complete for {event.inst_id}")
-        self.logger.info(f"Trader instructions: {len(trader_output.instructions)} commands")
+        self.logger.info(f"分析完成 {event.inst_id}")
+        self.logger.info(f"交易员指令: {len(trader_output.instructions)} 条")
 
         # 7. 保存压缩后的分析到历史
         self.history_service.add_record(event.inst_id, compressor_output.compressed_text)
@@ -230,19 +230,19 @@ class TradingLoop:
                     has_close_position = True
 
             except Exception as e:
-                self.logger.error(f"Failed to execute instruction {instruction.op.value}: {e}")
+                self.logger.error(f"执行指令失败 {instruction.op.value}: {e}")
 
         # 9. 如果执行了平仓，清空历史并保存交易记录
         if has_close_position:
             await self._handle_position_close(event.inst_id, position, balance)
 
-        self.logger.info(f"Analysis and trading complete for {event.inst_id}")
+        self.logger.info(f"分析和交易完成 {event.inst_id}")
 
     async def _handle_position_close(
         self, inst_id: str, position: Position, balance: AccountBalance
     ):
         """处理平仓事件"""
-        self.logger.info(f"Handling position close for {inst_id}")
+        self.logger.info(f"处理平仓事件 {inst_id}")
 
         # 清空分析历史
         self.history_service.clear_history(inst_id)
@@ -264,7 +264,7 @@ class TradingLoop:
 
     async def stop(self):
         """优雅停止"""
-        self.logger.info("Stopping trading loop...")
+        self.logger.info("停止交易循环...")
         self.running = False
 
         # 取消所有任务
@@ -278,4 +278,4 @@ class TradingLoop:
         # 刷新日志
         self.logger.flush()
 
-        self.logger.info("Trading loop stopped")
+        self.logger.info("交易循环已停止")

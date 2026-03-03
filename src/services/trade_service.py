@@ -39,19 +39,19 @@ class TradeService:
         初始化持仓模式
         设置所有交易对为单向持仓模式
         """
-        self.logger.info("Initializing position mode...")
+        self.logger.info("初始化持仓模式...")
 
-        # 设置持仓模式为单向持仓
+        # 设置单向持仓模式
         try:
             result = await self.okx_client.set_position_mode("net")
-            self.logger.info(f"Position mode set to net: {result}")
+            self.logger.info(f"持仓模式设置为单向: {result}")
         except Exception as e:
             # 51000错误表示持仓模式已设置或无法更改，可以继续
             if "51000" in str(e):
-                self.logger.warning(f"Position mode already set or cannot be changed: {e}")
-                self.logger.info("Continuing with existing position mode...")
+                self.logger.warning(f"持仓模式已设置或无法更改: {e}")
+                self.logger.info("使用现有持仓模式继续...")
             else:
-                self.logger.error(f"Failed to set position mode: {e}")
+                self.logger.error(f"设置持仓模式失败: {e}")
                 raise
 
         # 为每个交易对设置杠杆
@@ -62,9 +62,9 @@ class TradeService:
                     lever=pair.leverage,
                     mgn_mode=td_mode,
                 )
-                self.logger.info(f"Leverage set for {pair.inst_id}: {result}")
+                self.logger.info(f"杠杆设置完成 {pair.inst_id}: {result}")
             except Exception as e:
-                self.logger.error(f"Failed to set leverage for {pair.inst_id}: {e}")
+                self.logger.error(f"设置杠杆失败 {pair.inst_id}: {e}")
                 raise
 
     async def get_balance(self, ccy: str = "USDT") -> AccountBalance:
@@ -94,7 +94,7 @@ class TradeService:
         """
         self.logger.audit(
             operation=instruction.op.value,
-            params={"inst_id": inst_id, "args": instruction.args},
+            params={"交易对": inst_id, "参数": instruction.args},
             result={},
         )
 
@@ -121,7 +121,7 @@ class TradeService:
                 raise ValueError(f"Unknown operation: {instruction.op}")
 
         except Exception as e:
-            self.logger.error(f"Failed to execute instruction: {e}")
+            self.logger.error(f"执行指令失败: {e}")
             raise
 
     async def _entry_long(
@@ -168,7 +168,7 @@ class TradeService:
             client_oid=instruction.client_oid,
         )
 
-        self.logger.info(f"Entry long order placed: {result}")
+        self.logger.info(f"开多仓订单已提交: {result}")
         return result
 
     async def _entry_short(
@@ -215,7 +215,7 @@ class TradeService:
             client_oid=instruction.client_oid,
         )
 
-        self.logger.info(f"Entry short order placed: {result}")
+        self.logger.info(f"开空仓订单已提交: {result}")
         return result
 
     async def _close_position(self, inst_id: str, td_mode: str) -> dict[str, Any]:
@@ -225,7 +225,7 @@ class TradeService:
             mgn_mode=td_mode,
         )
 
-        self.logger.info(f"Position closed: {result}")
+        self.logger.info(f"仓位已平仓: {result}")
         return result
 
     async def _change_stop(
@@ -234,15 +234,15 @@ class TradeService:
         """修改止损价格"""
         # 需要通过修改订单或重新下单来实现
         # 这里简化处理，实际实现可能需要更复杂的逻辑
-        self.logger.info(f"Change stop price: {instruction.args}")
-        return {"status": "not_implemented"}
+        self.logger.info(f"修改止损价格: {instruction.args}")
+        return {"status": "未实现"}
 
     async def _change_profit(
         self, inst_id: str, instruction: TradeInstruction
     ) -> dict[str, Any]:
         """修改止盈价格"""
-        self.logger.info(f"Change profit price: {instruction.args}")
-        return {"status": "not_implemented"}
+        self.logger.info(f"修改止盈价格: {instruction.args}")
+        return {"status": "未实现"}
 
     async def _exit_long(
         self,
@@ -262,7 +262,7 @@ class TradeService:
             pos_side="long" if td_mode == "cross" else None,
         )
 
-        self.logger.info(f"Exit long order placed: {result}")
+        self.logger.info(f"多仓减仓订单已提交: {result}")
         return result
 
     async def _exit_short(
@@ -283,10 +283,10 @@ class TradeService:
             pos_side="short" if td_mode == "cross" else None,
         )
 
-        self.logger.info(f"Exit short order placed: {result}")
+        self.logger.info(f"空仓减仓订单已提交: {result}")
         return result
 
     def save_trade_record(self, record: TradeRecord):
         """保存交易记录"""
         self.trade_record_storage.append_record(record.to_dict())
-        self.logger.info(f"Trade record saved: {record}")
+        self.logger.info(f"交易记录已保存: {record}")

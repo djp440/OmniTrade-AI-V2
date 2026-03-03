@@ -31,7 +31,7 @@ class Bootstrap:
         Returns:
             是否通过自检
         """
-        self.logger.info("Starting bootstrap checks...")
+        self.logger.info("开始启动自检...")
 
         try:
             # 1. 加载配置
@@ -49,55 +49,55 @@ class Bootstrap:
             # 5. 验证LLM图片解析能力
             await self._check_llm_vision()
 
-            self.logger.info("All bootstrap checks passed!")
+            self.logger.info("所有启动自检通过!")
             return True
 
         except ConfigError as e:
-            self.logger.fatal(f"Configuration error: {e}")
+            self.logger.fatal(f"配置错误: {e}")
             sys.exit(self.EXIT_CONFIG_ERROR)
 
         except OKXAPIError as e:
-            self.logger.fatal(f"OKX connection error: {e}")
+            self.logger.fatal(f"OKX连接错误: {e}")
             sys.exit(self.EXIT_CONNECTION_ERROR)
 
         except LLMError as e:
-            self.logger.fatal(f"LLM connection error: {e}")
+            self.logger.fatal(f"LLM连接错误: {e}")
             sys.exit(self.EXIT_CONNECTION_ERROR)
 
         except Exception as e:
-            self.logger.fatal(f"Unexpected error during bootstrap: {e}")
+            self.logger.fatal(f"启动自检期间发生意外错误: {e}")
             sys.exit(self.EXIT_CONNECTION_ERROR)
 
     async def _check_config(self):
         """检查配置"""
-        self.logger.info("Checking configuration...")
+        self.logger.info("检查配置...")
 
         # 检查OKX配置
         if not self.config.okx_api_key:
-            raise ConfigError("OKX API key is missing")
+            raise ConfigError("缺少OKX API密钥")
         if not self.config.okx_api_secret:
-            raise ConfigError("OKX API secret is missing")
+            raise ConfigError("缺少OKX API密钥")
         if not self.config.okx_passphrase:
-            raise ConfigError("OKX passphrase is missing")
+            raise ConfigError("缺少OKX密码")
 
         # 检查LLM配置
         if not self.config.openai_api_key:
-            raise ConfigError("OpenAI API key is missing")
+            raise ConfigError("缺少OpenAI API密钥")
 
         # 检查交易对配置
         if not self.config.trade_pairs:
-            raise ConfigError("No trade pairs configured")
+            raise ConfigError("未配置交易对")
 
         # 检查Prompt配置
         for key in ["analyst", "trader", "compressor"]:
             if key not in self.config.prompts:
-                raise ConfigError(f"Missing prompt for {key}")
+                raise ConfigError(f"缺少{key}的Prompt配置")
 
-        self.logger.info("Configuration check passed")
+        self.logger.info("配置检查通过")
 
     async def _check_okx_connection(self):
         """检查OKX连接"""
-        self.logger.info("Checking OKX connection...")
+        self.logger.info("检查OKX连接...")
 
         self.okx_client = OKXRestClient(
             api_key=self.config.okx_api_key,
@@ -109,29 +109,29 @@ class Bootstrap:
         # 尝试查询余额验证连接
         try:
             balance = await self.okx_client.get_balance("USDT")
-            self.logger.info(f"OKX connection successful, balance: {balance}")
+            self.logger.info(f"OKX连接成功, 余额: {balance}")
         except Exception as e:
-            raise OKXAPIError(f"Failed to connect to OKX: {e}")
+            raise OKXAPIError(f"连接OKX失败: {e}")
 
         # 验证交易对合法性
         for pair in self.config.trade_pairs:
             try:
                 info = await self.okx_client.get_instrument_info(pair.inst_id)
-                self.logger.info(f"Trade pair {pair.inst_id} is valid: {info.get('instId')}")
+                self.logger.info(f"交易对 {pair.inst_id} 有效: {info.get('instId')}")
             except Exception as e:
-                raise OKXAPIError(f"Invalid trade pair {pair.inst_id}: {e}")
+                raise OKXAPIError(f"无效的交易对 {pair.inst_id}: {e}")
 
     async def _check_position_mode(self):
         """检查并设置持仓模式"""
-        self.logger.info("Checking position mode...")
+        self.logger.info("检查持仓模式...")
 
         # 设置单向持仓模式
         try:
             result = await self.okx_client.set_position_mode("net")
-            self.logger.info(f"Position mode set to net: {result}")
+            self.logger.info(f"持仓模式设置为单向: {result}")
         except Exception as e:
             # 可能已经设置过了，忽略错误
-            self.logger.warning(f"Failed to set position mode (may already be set): {e}")
+            self.logger.warning(f"设置持仓模式失败(可能已设置): {e}")
 
         # 设置每个交易对的杠杆
         for pair in self.config.trade_pairs:
@@ -141,15 +141,15 @@ class Bootstrap:
                     lever=pair.leverage,
                     mgn_mode=self.config.global_config.td_mode,
                 )
-                self.logger.info(f"Leverage set for {pair.inst_id}: {result}")
+                self.logger.info(f"杠杆设置完成 {pair.inst_id}: {result}")
             except Exception as e:
                 self.logger.warning(
-                    f"Failed to set leverage for {pair.inst_id} (may already be set): {e}"
+                    f"设置杠杆失败 {pair.inst_id} (可能已设置): {e}"
                 )
 
     async def _check_llm_connection(self):
         """检查LLM连接"""
-        self.logger.info("Checking LLM connection...")
+        self.logger.info("检查LLM连接...")
 
         self.llm_client = LLMClient(
             api_key=self.config.openai_api_key,
@@ -160,13 +160,13 @@ class Bootstrap:
         # 尝试发送测试请求
         is_connected = await self.llm_client.test_connection()
         if not is_connected:
-            raise LLMError("Failed to connect to LLM API")
+            raise LLMError("连接LLM API失败")
 
-        self.logger.info("LLM connection successful")
+        self.logger.info("LLM连接成功")
 
     async def _check_llm_vision(self):
         """检查LLM图片解析能力"""
-        self.logger.info("Checking LLM vision capability...")
+        self.logger.info("检查LLM图片解析能力...")
 
         # 创建一个简单的测试K线图
         test_klines = [
@@ -192,9 +192,9 @@ class Bootstrap:
         # 测试图片解析
         is_vision_working = await self.llm_client.test_vision()
         if not is_vision_working:
-            raise LLMError("LLM vision capability is not working")
+            raise LLMError("LLM图片解析能力不可用")
 
-        self.logger.info("LLM vision capability check passed")
+        self.logger.info("LLM图片解析能力检查通过")
 
     def get_okx_client(self) -> OKXRestClient:
         """获取已初始化的OKX客户端"""

@@ -30,10 +30,10 @@ class HistoryService:
         # 如果超出最大长度，删除最早的记录
         if len(self._history[inst_id]) > self.max_history_length:
             removed = self._history[inst_id].pop(0)
-            self.logger.debug(f"Removed oldest history for {inst_id}: {removed}")
+            self.logger.debug(f"删除最早历史记录 {inst_id}: {removed}")
 
         self.logger.info(
-            f"Added history for {inst_id}, current length: {len(self._history[inst_id])}"
+            f"添加历史记录 {inst_id}, 当前长度: {len(self._history[inst_id])}"
         )
 
     def get_history(self, inst_id: str) -> list[str]:
@@ -57,7 +57,7 @@ class HistoryService:
         """
         if inst_id in self._history:
             self._history[inst_id] = []
-            self.logger.info(f"Cleared history for {inst_id}")
+            self.logger.info(f"清空历史记录 {inst_id}")
 
     def get_all_inst_ids(self) -> list[str]:
         """获取所有有历史记录的交易对ID"""

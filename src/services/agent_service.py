@@ -51,7 +51,7 @@ class AgentService:
         # 构建用户消息
         user_message = self._build_analyst_message(input_data)
 
-        self.logger.info(f"Calling analyst for {input_data.current_position.inst_id}")
+        self.logger.info(f"调用分析师 {input_data.current_position.inst_id}")
 
         response = await self.llm_client.chat(
             system_prompt=system_prompt,
@@ -60,7 +60,7 @@ class AgentService:
             images=[input_data.kline_image_base64],
         )
 
-        self.logger.debug(f"Analyst response: {response}")
+        self.logger.debug(f"分析师响应: {response}")
 
         # 解析分析师输出
         return self._parse_analyst_response(response)
@@ -130,7 +130,7 @@ class AgentService:
         # 构建用户消息
         user_message = self._build_trader_message(input_data)
 
-        self.logger.info(f"Calling trader for {input_data.current_position.inst_id}")
+        self.logger.info(f"调用交易员 {input_data.current_position.inst_id}")
 
         # 重试机制
         for attempt in range(self.MAX_TRADER_RETRIES):
@@ -141,18 +141,18 @@ class AgentService:
                     temperature=0.0,
                 )
 
-                self.logger.debug(f"Trader response: {response}")
+                self.logger.debug(f"交易员响应: {response}")
 
                 # 解析并验证JSON
                 instructions = self._parse_trader_response(response)
                 return TraderOutput(instructions=instructions)
 
             except Exception as e:
-                self.logger.error(f"Trader response parsing failed (attempt {attempt + 1}): {e}")
+                self.logger.error(f"交易员响应解析失败 (尝试 {attempt + 1}): {e}")
                 if attempt < self.MAX_TRADER_RETRIES - 1:
                     await asyncio.sleep(1)
                 else:
-                    self.logger.error("Max retries reached, returning empty instructions")
+                    self.logger.error("达到最大重试次数, 返回空指令")
                     return TraderOutput(instructions=[])
 
         return TraderOutput(instructions=[])
@@ -228,7 +228,7 @@ class AgentService:
 
         user_message = f"Please compress the following analysis:\n\n{input_data.analyst_output.analysis}"
 
-        self.logger.info("Calling compressor")
+        self.logger.info("调用压缩者")
 
         response = await self.llm_client.chat_text_only(
             system_prompt=system_prompt,
@@ -236,7 +236,7 @@ class AgentService:
             temperature=0.1,
         )
 
-        self.logger.debug(f"Compressor response: {response}")
+        self.logger.debug(f"压缩者响应: {response}")
 
         # 截断到100字
         compressed = response[:100] if len(response) > 100 else response

@@ -41,9 +41,9 @@ async def main():
         log_level=config.global_config.log_level,
     )
 
-    logger.info("Application starting...")
-    logger.info(f"Demo mode: {config.global_config.demo_mode}")
-    logger.info(f"Trade pairs: {[p.inst_id for p in config.trade_pairs]}")
+    logger.info("应用程序启动...")
+    logger.info(f"模拟盘模式: {config.global_config.demo_mode}")
+    logger.info(f"交易对: {[p.inst_id for p in config.trade_pairs]}")
 
     try:
         # 运行启动自检
@@ -109,9 +109,9 @@ async def main():
         await trading_loop.run()
 
     except KeyboardInterrupt:
-        logger.info("Received keyboard interrupt, shutting down...")
+        logger.info("收到键盘中断, 正在关闭...")
     except Exception as e:
-        logger.fatal(f"Fatal error: {e}")
+        logger.fatal(f"致命错误: {e}")
         raise
     finally:
         # 清理资源
@@ -119,7 +119,7 @@ async def main():
             await okx_rest_client.close()
         if 'okx_ws_client' in locals():
             await okx_ws_client.close()
-        logger.info("Application shutdown complete")
+        logger.info("应用程序关闭完成")
 
 
 if __name__ == "__main__":
