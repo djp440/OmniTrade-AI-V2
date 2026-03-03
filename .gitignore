@@ -105,6 +105,8 @@ logs/
 *.log
 venv/
 .venv/
+trade_records.csv
+*.png
 #uv.lock
 
 # poetry
