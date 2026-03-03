@@ -7,7 +7,7 @@ import base64
 import io
 from typing import Any
 
-from openai import AsyncOpenAI, APIError, Timeout
+from openai import AsyncOpenAI, APIError
 
 from src.infrastructure.logger import Logger
 
@@ -89,7 +89,7 @@ class LLMClient:
                 self._logger.debug(f"LLM响应: {content[:100]}...")
                 return content
 
-            except Timeout:
+            except asyncio.TimeoutError:
                 last_error = TimeoutError(f"LLM请求超时（{self._timeout}秒）")
                 self._logger.warning(f"LLM请求超时，尝试重试 ({attempt + 1}/{self._max_retries + 1})")
             except APIError as e:

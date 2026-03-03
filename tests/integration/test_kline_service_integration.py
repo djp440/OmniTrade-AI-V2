@@ -20,7 +20,9 @@ from src.infrastructure.okx_rest_client import OkxRestClient
 from src.infrastructure.okx_ws_client import KlineData as WSKlineData, OkxWebSocketClient
 from src.services.kline_service import KlineService
 
-load_dotenv()
+# 从项目根目录的 config/.env 加载环境变量
+env_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "config", ".env")
+load_dotenv(env_path)
 
 DEMO_API_KEY = os.getenv("OKX_DEMO_API_KEY", "")
 DEMO_API_SECRET = os.getenv("OKX_DEMO_API_SECRET", "")
@@ -72,7 +74,7 @@ class TestKlineServiceIntegration(IsolatedAsyncioTestCase):
         self.assertLessEqual(len(klines), 100)
 
         kline = klines[0]
-        self.assertEqual(kline.open, Decimal("0"))
+        self.assertGreater(kline.open, Decimal("0"))
 
     async def test_get_klines_with_ema_integration(self) -> None:
         """测试获取K线数据并计算EMA、生成图表"""

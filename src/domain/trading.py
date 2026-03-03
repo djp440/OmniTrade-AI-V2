@@ -97,7 +97,7 @@ class Kline(BaseModel):
     def from_okx_data(cls, data: list) -> Self:
         """从OKX API返回的数据创建K线对象
 
-        OKX K线数据格式: [timestamp, open, high, low, close, vol, confirm]
+        OKX K线数据格式: [timestamp, open, high, low, close, vol, volCcy, confirm]
         """
         return cls(
             timestamp=int(data[0]),
@@ -106,7 +106,7 @@ class Kline(BaseModel):
             low=Decimal(str(data[3])),
             close=Decimal(str(data[4])),
             vol=Decimal(str(data[5])),
-            confirm=int(data[6]) if len(data) > 6 else 1,
+            confirm=int(data[8]) if len(data) > 8 else 1,
         )
 
 

@@ -49,12 +49,16 @@ class KlinePlotter:
         self,
         klines: list[KlineData],
         ema_values: NDArray[np.float64] | None = None,
+        inst_id: str = "",
+        timeframe: str = "",
     ) -> bytes:
         """生成K线图并返回PNG字节数据。
 
         Args:
             klines: K线数据列表
             ema_values: EMA值数组，可选
+            inst_id: 交易对ID，如 BTC-USDT-SWAP
+            timeframe: K线周期，如 1H, 4H, 1D
 
         Returns:
             PNG格式图片字节数据
@@ -74,7 +78,7 @@ class KlinePlotter:
             if ema_values is not None and len(ema_values) > 0:
                 self._plot_ema(ax, klines, ema_values)
 
-            self._setup_axes(ax, klines)
+            self._setup_axes(ax, klines, inst_id, timeframe)
 
             ax.set_position([0.08, 0.12, 0.88, 0.82])
 
@@ -95,17 +99,21 @@ class KlinePlotter:
         self,
         klines: list[KlineData],
         ema_values: NDArray[np.float64] | None = None,
+        inst_id: str = "",
+        timeframe: str = "",
     ) -> str:
         """生成K线图并返回base64编码字符串。
 
         Args:
             klines: K线数据列表
             ema_values: EMA值数组，可选
+            inst_id: 交易对ID，如 BTC-USDT-SWAP
+            timeframe: K线周期，如 1H, 4H, 1D
 
         Returns:
             base64编码的PNG图片字符串
         """
-        png_data = self.plot(klines, ema_values)
+        png_data = self.plot(klines, ema_values, inst_id, timeframe)
         return base64.b64encode(png_data).decode("utf-8")
 
     def save_to_file(
@@ -113,6 +121,8 @@ class KlinePlotter:
         filepath: str,
         klines: list[KlineData],
         ema_values: NDArray[np.float64] | None = None,
+        inst_id: str = "",
+        timeframe: str = "",
     ) -> None:
         """生成K线图并保存到文件（用于调试）。
 
@@ -120,8 +130,10 @@ class KlinePlotter:
             filepath: 保存路径
             klines: K线数据列表
             ema_values: EMA值数组，可选
+            inst_id: 交易对ID，如 BTC-USDT-SWAP
+            timeframe: K线周期，如 1H, 4H, 1D
         """
-        png_data = self.plot(klines, ema_values)
+        png_data = self.plot(klines, ema_values, inst_id, timeframe)
         with open(filepath, "wb") as f:
             f.write(png_data)
         self._logger.info(f"K线图已保存: {filepath}")
@@ -182,9 +194,28 @@ class KlinePlotter:
             valid_ema = ema_values[valid_mask]
             ax.plot(valid_x, valid_ema, color=self.COLOR_EMA, linewidth=1.5, label="EMA20")
 
-    def _setup_axes(self, ax: plt.Axes, klines: list[KlineData]) -> None:
+    def _setup_axes(
+        self,
+        ax: plt.Axes,
+        klines: list[KlineData],
+        inst_id: str = "",
+        timeframe: str = "",
+    ) -> None:
         """设置坐标轴。"""
         timestamps = [k.timestamp for k in klines]
+
+        # 设置标题（显示品种和周期）
+        if inst_id and timeframe:
+            title = f"{inst_id}  {timeframe}"
+        elif inst_id:
+            title = inst_id
+        elif timeframe:
+            title = timeframe
+        else:
+            title = ""
+
+        if title:
+            ax.set_title(title, fontsize=14, fontweight="bold", loc="center", pad=10)
 
         ax.set_xlabel("Time", fontsize=12)
         ax.set_ylabel("Price", fontsize=12)

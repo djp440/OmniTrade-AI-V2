@@ -71,12 +71,15 @@ async def test_llm_image():
         closes = np.array([k.close for k in klines])
         ema = EMACalculator.calculate_ema20(closes)
         
-        png_data = plotter.plot(klines, ema)
+        inst_id = "BTC-USDT-SWAP"
+        timeframe = "1H"
+        
+        png_data = plotter.plot(klines, ema, inst_id=inst_id, timeframe=timeframe)
         print(f"K线图生成完成: {len(png_data)} bytes")
         
         # 保存一份用于调试
         debug_path = "logs/test_kline_image.png"
-        plotter.save_to_file(debug_path, klines, ema)
+        plotter.save_to_file(debug_path, klines, ema, inst_id=inst_id, timeframe=timeframe)
         
         print("\n测试: 图片分析请求...")
         response = await client.chat(

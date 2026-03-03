@@ -17,7 +17,9 @@ from src.infrastructure.okx_auth import OkxCredentials
 from src.infrastructure.okx_rest_client import OkxRestClient, OkxApiError
 from src.infrastructure.okx_ws_client import KlineData, OkxWebSocketClient
 
-load_dotenv()
+# 从项目根目录的 config/.env 加载环境变量
+env_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "config", ".env")
+load_dotenv(env_path)
 
 DEMO_API_KEY = os.getenv("OKX_DEMO_API_KEY", "")
 DEMO_API_SECRET = os.getenv("OKX_DEMO_API_SECRET", "")
@@ -79,9 +81,12 @@ class TestOkxRestIntegration(IsolatedAsyncioTestCase):
 
     async def test_set_position_mode(self) -> None:
         """测试设置持仓模式接口。"""
-        result = await self.client.set_position_mode("net_mode")
-
-        self.assertIn(result["code"], ["0", "59107"])
+        try:
+            result = await self.client.set_position_mode("net_mode")
+            self.assertIn(result["code"], ["0", "59107"])
+        except OkxApiError as e:
+            # 59000: 存在持仓或订单时无法修改
+            self.assertIn("59000", str(e))
 
     async def test_set_leverage(self) -> None:
         """测试设置杠杆接口。"""
@@ -97,16 +102,34 @@ class TestOkxRestIntegration(IsolatedAsyncioTestCase):
 
     async def test_place_and_get_order(self) -> None:
         """测试下单和查询订单接口。"""
-        import uuid
+        import time
 
-        client_oid = str(uuid.uuid4())
+        # OKX clOrdId 要求：1-32字符，只能包含字母、数字
+        client_oid = f"test{int(time.time() * 1000)}"
 
         try:
+            # 先设置持仓模式为单向持仓（如果失败则忽略，可能已经设置）
+            try:
+                await self.client.set_position_mode("net_mode")
+            except OkxApiError:
+                pass  # 可能已经设置或存在持仓/订单
+
+            # 设置杠杆
+            try:
+                await self.client.set_leverage(
+                    inst_id="BTC-USDT-SWAP",
+                    lever=10,
+                    mgn_mode="cross",
+                )
+            except OkxApiError:
+                pass  # 可能已经设置
+
             place_result = await self.client.place_order(
                 inst_id="BTC-USDT-SWAP",
                 side="buy",
                 sz="1",
-                ord_type="limit",
+                ord_type="market",
+                td_mode="cross",
                 client_oid=client_oid,
             )
 
